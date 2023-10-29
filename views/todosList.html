@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-900 text-white">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <script
+      src="https://unpkg.com/htmx.org@1.9.6"
+      integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni"
+      crossorigin="anonymous"
+    ></script>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"
+      integrity="sha512-Eezs+g9Lq4TCCq0wae01s9PuNWzHYoCMkE97e2qdkYthpI0pzC3UGB03lgEHn2XM85hDOUF6qgqqszs+iXU4UA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@3.9.3/dist/full.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <title>GoMx-TodoApp</title>
+  </head>
+  <body>
+    <div class="p-8 max-w-4xl m-auto">
+      <h1
+        class="text-4xl font-bold leading-10 text-gray-100 sm:truncate sm:text-5xl sm:tracking-tight"
+      >
+        GoMx
+      </h1>
+
+      <form class="mt-6">
+        <div class="join w-full">
+          <input
+            type="text"
+            name="todo"
+            class="input input-bordered input-info w-6 join-item w-full h-16"
+            placeholder="What to do?"
+            id="input"
+          />
+          <button
+            class="btn join-item rounded-r-full h-16 btn-outline btn-info"
+            hx-post="/todo/create"
+            hx-target="#todos"
+            hx-swap="innerHTML"
+            hx-on::after-request="clearTextField()"
+          >
+            ADD TODO
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-10">
+        <div id="todos" class="grid grid-cols-1 gap-4">
+          {{ block "Todos" .}} {{ if .ErrorMsg }}
+          <script>
+            showToast("{{ .ErrorMsg }}");
+          </script>
+          {{ end }} {{ range .TodosList }}
+          <div
+            class="bg-gray-700 p-4 rounded shadow-md justify-between {{ if .Done}} bg-gray-800 text-gray-500 {{ end }} flex items-stretch sm:flex sm:flex-row flex-col sm:items-center"
+          >
+          <div class="flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 -3 24 24"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="handle mr-1 stroke-info"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <line x1="5" y1="6" x2="19" y2="6" />
+            </svg>
+
+            <span class="text-lg {{ if .Done}} line-through {{ end }} break-all leading-tight"
+              >{{ .Todo }}</span
+            >
+            </div>
+            <div class="space-x-2 flex ml-3 self-end mt-1 sm:mt-0">
+              <button
+                class="btn-sm btn-circle {{ if not .Done }} btn-outline {{ end }} btn-success border-2"
+                hx-put="/todo/{{ .ID }}"
+                hx-target="#todos"
+                hx-swap="innerHTML"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-full"
+                  fill="none"
+                  viewBox="-2 0 22 22"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 7H1a1 1 0 0 0-1 1v8a2 2 0 0 0 4 0V8a1 1 0 0 0-1-1Zm12.954 0H12l1.558-4.5a1.778 1.778 0 0 0-3.331-1.06A24.859 24.859 0 0 1 6 6.8v9.586h.114C8.223 16.969 11.015 18 13.6 18c1.4 0 1.592-.526 1.88-1.317l2.354-7A2 2 0 0 0 15.954 7Z"
+                  />
+                </svg>
+              </button>
+
+              <button
+                class="btn-sm btn-circle btn-outline btn-info border-2"
+                onclick="editTodoModal('{{ .ID }}')"
+              >
+                <svg
+                  class="feather feather-edit h-5 w-full"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="-2 0 26 26"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                  />
+                  <path
+                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                  />
+                </svg>
+              </button>
+
+              <dialog
+                id="my_modal_{{ .ID }}"
+                class="modal modal-middle text-white"
+              >
+                <div class="modal-box">
+                  <form method="dialog">
+                    <button
+                      class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                    >
+                      ✕
+                    </button>
+                    <h3 class="font-bold text-lg">Edit Todo</h3>
+                    <input
+                      type="text"
+                      name="newtodo"
+                      placeholder="Type here"
+                      class="input input-bordered input-info w-full mt-4"
+                    />
+                    <div class="modal-action">
+                      <button class="btn btn-error btn-outline" hx-cancel>
+                        Cancel
+                      </button>
+                      <button
+                        class="btn btn-success btn-outline"
+                        hx-put="/todo/edit/{{ .ID }}"
+                        hx-target="#todos"
+                        hx-swap="innerHTML"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </dialog>
+
+              <button
+                class="btn-sm btn-circle btn-outline btn-error border-2"
+                hx-delete="/todo/{{ .ID }}"
+                hx-target="#todos"
+                hx-swap="innerHTML"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-full"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          {{ end }} {{ end }}
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    function editTodoModal(id) {
+      var modalId = "my_modal_" + id;
+
+      var modal = document.getElementById(modalId);
+
+      if (modal) {
+        modal.showModal();
+      }
+    }
+
+    function showToast(message) {
+      var toast = document.createElement("div");
+      toast.className = "toast toast-top toast-center";
+      toast.innerHTML =
+        '<div class="alert alert-error"><span>' + message + "</span></div>";
+      document.body.appendChild(toast);
+
+      function hideToast() {
+        toast.style.display = "none";
+        toast.remove();
+      }
+
+      var hideToastTimer = setTimeout(hideToast, 3000);
+    }
+
+    function clearTextField() {
+      var inputField = document.getElementById("input");
+
+      inputField.value = "";
+    }
+
+    let TodoList = document.getElementById("todos");
+
+    new Sortable(TodoList, {
+      handle: ".handle", // handle's class
+      animation: 150,
+    });
+  </script>
+</html>
