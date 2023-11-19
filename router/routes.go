@@ -4,6 +4,7 @@ import (
 	"gomx/handlers"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 )
@@ -18,10 +19,18 @@ func SetupAndRun() {
 	todo.HandleFunc("/edit/{id}", handlers.EditTodo).Methods("PUT")
 	todo.HandleFunc("/{id}", handlers.DeleteTodo).Methods("DELETE")
 
-	log.Println("Server Live at: http://localhost:5000")
+	log.Println("Server Live at: http://localhost:3000")
 
-	// utils.OpenInBrowser("chrome", "http://localhost:5000", true)
+	// utils.OpenInBrowser("chrome", "http://localhost:3000", true)
+	host := "0.0.0.0:"
+	port := os.Getenv("PORT")
 
-	log.Fatal(http.ListenAndServe(":5000", r))
+	if port == "" {
+		port = "3000"
+	}
+
+	addrStr := host + port
+
+	log.Fatal(http.ListenAndServe(addrStr, r))
 
 }
