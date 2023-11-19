@@ -18,10 +18,10 @@ func SetupAndRun() {
 	todo.HandleFunc("/edit/{id}", handlers.EditTodo).Methods("PUT")
 	todo.HandleFunc("/{id}", handlers.DeleteTodo).Methods("DELETE")
 
-	log.Println("Server Live at: http://localhost:8080")
+	log.Println("Server Live at: http://localhost:5000")
 
-	// utils.OpenInBrowser("chrome", "http://localhost:8080", true)
+	// utils.OpenInBrowser("chrome", "http://localhost:5000", true)
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(http.ListenAndServe(":5000", r))
 
 }
