@@ -19,8 +19,6 @@ func SetupAndRun() {
 	todo.HandleFunc("/edit/{id}", handlers.EditTodo).Methods("PUT")
 	todo.HandleFunc("/{id}", handlers.DeleteTodo).Methods("DELETE")
 
-	log.Println("Server Live at: http://localhost:3000")
-
 	// utils.OpenInBrowser("chrome", "http://localhost:3000", true)
 	host := "0.0.0.0:"
 	port := os.Getenv("PORT")
@@ -31,6 +29,7 @@ func SetupAndRun() {
 
 	addrStr := host + port
 
+	log.Println("Server Live at:", port)
 	log.Fatal(http.ListenAndServe(addrStr, r))
 
 }
